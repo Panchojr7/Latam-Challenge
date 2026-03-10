@@ -1,12 +1,17 @@
 import unittest
 import pandas as pd
+from pathlib import Path
+import os
 
 from sklearn.metrics import classification_report
 from sklearn.model_selection import train_test_split
 from challenge.model import DelayModel
 
 class TestModel(unittest.TestCase):
-
+    """
+    Unit tests for the DelayModel class, covering preprocessing, 
+    model training (fitting), and inference (prediction).
+    """
     FEATURES_COLS = [
         "OPERA_Latin American Wings", 
         "MES_7",
@@ -26,14 +31,23 @@ class TestModel(unittest.TestCase):
 
 
     def setUp(self) -> None:
+        """
+        Initializes the test environment by instantiating the model 
+        and loading the source dataset.
+        """
         super().setUp()
         self.model = DelayModel()
-        self.data = pd.read_csv(filepath_or_buffer="../data/data.csv")
+        data_path = Path(os.getcwd(),"data/data.csv")
+        self.data = pd.read_csv(filepath_or_buffer=data_path)
         
 
     def test_model_preprocess_for_training(
         self
     ):
+        """
+        Tests the preprocessing method when a target column is provided, 
+        ensuring it returns both features and target with correct shapes.
+        """
         features, target = self.model.preprocess(
             data=self.data,
             target_column="delay"
@@ -51,6 +65,10 @@ class TestModel(unittest.TestCase):
     def test_model_preprocess_for_serving(
         self
     ):
+        """
+        Tests the preprocessing method for inference (serving) mode, 
+        verifying that only the feature DataFrame is returned.
+        """
         features = self.model.preprocess(
             data=self.data
         )
@@ -63,6 +81,10 @@ class TestModel(unittest.TestCase):
     def test_model_fit(
         self
     ):
+        """
+        Tests the model's fit method and validates its performance 
+        against predefined metrics using a validation split.
+        """
         features, target = self.model.preprocess(
             data=self.data,
             target_column="delay"
@@ -90,8 +112,17 @@ class TestModel(unittest.TestCase):
     def test_model_predict(
         self
     ):
-        features = self.model.preprocess(
-            data=self.data
+        """
+        Tests the predict method to ensure it returns a list of 
+        integer predictions corresponding to the input features.
+        """
+        features, target = self.model.preprocess(
+            data=self.data, target_column="delay"
+        )
+        
+        self.model.fit(
+            features=features,
+            target=target
         )
 
         predicted_targets = self.model.predict(
